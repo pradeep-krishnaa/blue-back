@@ -22,7 +22,7 @@ app.use(cors(corsOptions));
 app.use(Express.json());
 
 // MQTT Setup
-const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL || 'mqtt://35.200.163.26:1883');
+const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL || 'mqtt://34.100.196.132:1883');
 
 mqttClient.on('connect', () => {
   console.log('MQTT client connected.');
