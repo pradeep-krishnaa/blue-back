@@ -2,27 +2,30 @@ const Express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require('cors');
-const mqtt = require('mqtt');  // Import MQTT
-require('dotenv').config();    // Import dotenv to load environment variables
+const mqtt = require('mqtt'); 
+require('dotenv').config();    
 
 const app = Express();
 const server = http.Server(app);
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3002;
 
 const corsOptions = {
   origin: "*",
   methods: ['GET', 'POST']
 };
 
-// Store car positions
 const carPositions = new Map();
 
 app.use(cors(corsOptions));
 app.use(Express.json());
 
-// MQTT Setup
-const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL || 'mqtt://34.100.196.132:1883');
+// const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883');
+const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL, {
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD
+});
+
 
 mqttClient.on('connect', () => {
   console.log('MQTT client connected.');
@@ -58,6 +61,7 @@ function parseTime(timeString) {
   const seconds = timeString.slice(4);
   return `${hours}:${minutes}:${seconds}`;
 }
+
 
 function isValidNMEA(parts) {
   if (parts.length < 9) {
