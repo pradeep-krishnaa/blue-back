@@ -21,10 +21,8 @@ app.use(cors(corsOptions));
 app.use(Express.json());
 
 // const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883');
-const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL, {
-  username: process.env.MQTT_USERNAME,
-  password: process.env.MQTT_PASSWORD
-});
+const mqttClient = mqtt.connect('mqtt://test.mosquitto.org');
+
 
 
 mqttClient.on('connect', () => {
@@ -152,30 +150,33 @@ mqttClient.on('message', (topic, message) => {
   const payload = JSON.parse(message.toString());
 
   if (topic === 'sim7600/nmea') {
-    const { carId, nmea } = payload;
+  const { carId, latitude, longitude } = payload;
 
-    if (!nmea || !carId) {
-      console.warn("Invalid NMEA data received");
-      return;
-    }
-
-    const parsedData = parseNMEA(nmea);
-    if (!parsedData) {
-      console.warn("Failed to parse NMEA data");
-      return;
-    }
-
-    // Directly update the car's position
-    const updatedPosition = {
-      carId,
-      latitude: parsedData.latitude,
-      longitude: parsedData.longitude,
-      ...parsedData
-    };
-
-    carPositions.set(carId, updatedPosition);
-    io.emit('locationUpdate', [updatedPosition]);  // Broadcast the update to clients
+  if (
+    typeof carId === 'undefined' ||
+    typeof latitude !== 'number' ||
+    typeof longitude !== 'number'
+  ) {
+    console.warn("❌ Invalid minimal GPS data received:", payload);
+    return;
   }
+
+  const updatedPosition = {
+    carId,
+    latitude,
+    longitude
+  };
+
+  console.log(`📥 Location from Car ${carId}:`, updatedPosition);
+
+  carPositions.set(carId, updatedPosition);
+  io.emit('locationUpdate', [updatedPosition]);
+
+  console.log(`📤 Location emitted for Car ${carId}`);
+}
+
+
+
 
   if (topic === 'sim7600/sos') {
     const { carId, message } = payload;
